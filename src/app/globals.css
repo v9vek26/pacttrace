@@ -9,6 +9,7 @@
 }
 
 html {
+  scroll-behavior: smooth;
   background: #070b14;
 }
 
@@ -29,6 +30,33 @@ button {
   cursor: pointer;
 }
 
+button:disabled {
+  cursor: not-allowed;
+}
+
+textarea {
+  scrollbar-width: thin;
+}
+
 ::selection {
   background: rgba(99, 102, 241, 0.35);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #070b14;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 999px;
+  border: 2px solid #070b14;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
 }
