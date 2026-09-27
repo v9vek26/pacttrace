@@ -67,3 +67,19 @@ export async function recallVendorMemories(
     ];
   });
 }
+export function selectVendorMemories(memories: VendorMemory[]): VendorMemory[] {
+  const seen = new Set<string>();
+  // Hindsight returns relevance-ranked facts. Keep the first representative,
+  // including its original ID and exact text for evidence validation.
+  return memories.filter((memory) => {
+    const key = memory.text.split(/ \| (?:When|Involving):/)[0]
+      .normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim()
+      .replace(/[.!]+$/, "");
+    // Ignore repeated retrieval annotations, case and whitespace only. Avoid
+    // fuzzy merging: changed numbers, negation, conditions and dates matter.
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  }).slice(0, 5).map(({ id, text }) => ({ id, text }));
+}
+

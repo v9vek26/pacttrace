@@ -25,6 +25,7 @@ import {
   type FormEvent,
   type ReactNode,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -75,6 +76,8 @@ type AnalysisResult = {
   conflicts?: Conflict[];
   recommendation?: string;
   memoryCount?: number;
+  memoriesUsed?: number;
+  retryCount?: number;
   financialImpact?: null;
   model?: string | null;
   analysisStatus?: string;
@@ -98,55 +101,10 @@ type TimelineItem = {
 
 const VENDOR = "CloudNova";
 
-const demoVendors = [
-  {
-    name: "CloudNova",
-    category: "Cloud Infrastructure",
-    spend: "₹4.0L",
-    commitments: 3,
-    risk: "High",
-  },
-  {
-    name: "SecureStack",
-    category: "Cybersecurity",
-    spend: "₹7.8L",
-    commitments: 4,
-    risk: "Low",
-  },
-  {
-    name: "RecruitFlow",
-    category: "Recruiting",
-    spend: "₹2.4L",
-    commitments: 2,
-    risk: "Medium",
-  },
-];
-
-const fallbackLedger: LedgerRow[] = [
-  {
-    vendor: "CloudNova",
-    commitment: "15% renewal discount above 100 seats",
-    detail: "Historical Hindsight commitment",
-    status: "Promised",
-    tone: "neutral",
-  },
-  {
-    vendor: "CloudNova",
-    commitment: "Onboarding fee waived",
-    detail: "Historical Hindsight commitment",
-    status: "Promised",
-    tone: "neutral",
-  },
-  {
-    vendor: "SecureStack",
-    commitment: "Premium support included for 12 months",
-    detail: "Demo portfolio data",
-    status: "Honored",
-    tone: "success",
-  },
-];
-
 export default function Home() {
+  const busyRef = useRef(false);
+  const [lastRemembered, setLastRemembered] = useState("");
+  const [submittedQuote, setSubmittedQuote] = useState("");
   const [interaction, setInteraction] = useState(
     "CloudNova agreed to waive the onboarding fee and promised a 15% renewal discount if the account exceeds 100 seats.",
   );
@@ -166,7 +124,7 @@ export default function Home() {
   const [showBrief, setShowBrief] = useState(false);
 
   const [activity, setActivity] = useState<string[]>([
-    "PactTrace connected to Hindsight memory",
+    "Ready to retain or recall vendor memory",
     "CloudNova selected as active vendor",
   ]);
 
@@ -180,80 +138,24 @@ export default function Home() {
     (conflict) => conflict.severity === "high",
   );
 
-  const ledgerRows = useMemo<LedgerRow[]>(() => {
-    const extracted =
-      interactionResult?.success &&
-      interactionResult.extracted?.commitments.length
-        ? interactionResult.extracted.commitments.map(
-            (commitment): LedgerRow => ({
-              vendor: VENDOR,
-              commitment: commitment.description,
-              detail: commitment.condition
-                ? `Condition: ${commitment.condition}`
-                : commitment.value ?? "Captured from vendor interaction",
-              status: "Promised",
-              tone: "neutral",
-            }),
-          )
-        : fallbackLedger.filter((item) => item.vendor === VENDOR);
+  const ledgerRows: LedgerRow[] = analysisResult?.success && conflicts.length > 0
+    ? conflicts.map((conflict) => ({
+        vendor: analysisResult.vendor ?? VENDOR,
+        commitment: conflict.historicalCommitment,
+        detail: conflict.condition ? 'Condition: ' + conflict.condition : undefined,
+        status: conflict.status === 'potential_conflict' ? 'Potential conflict' : conflict.status === 'honored' ? 'Honored' : 'Needs evidence',
+        tone: conflict.status === 'potential_conflict' ? 'danger' : conflict.status === 'honored' ? 'success' : 'warning',
+      }))
+    : interactionResult?.success
+      ? (interactionResult.extracted?.commitments ?? []).map((commitment) => ({
+          vendor: interactionResult.extracted?.vendor ?? VENDOR,
+          commitment: commitment.description,
+          detail: commitment.condition ?? commitment.value ?? undefined,
+          status: 'Promised', tone: 'neutral',
+        }))
+      : [];
 
-    const updated = extracted.map((row) => {
-      const normalized = `${row.commitment} ${row.detail ?? ""}`.toLowerCase();
-
-      const related = conflicts.find((conflict) => {
-        const evidence =
-          `${conflict.title} ${conflict.historicalCommitment}`.toLowerCase();
-
-        if (normalized.includes("discount")) {
-          return evidence.includes("discount");
-        }
-
-        if (
-          normalized.includes("onboarding") ||
-          normalized.includes("fee")
-        ) {
-          return (
-            evidence.includes("onboarding") ||
-            evidence.includes("fee waiver")
-          );
-        }
-
-        return false;
-      });
-
-      if (!related) {
-        return row;
-      }
-
-      if (related.status === "potential_conflict") {
-        return {
-          ...row,
-          status: "Potential conflict",
-          tone: "danger" as const,
-        };
-      }
-
-      if (related.status === "honored") {
-        return {
-          ...row,
-          status: "Honored",
-          tone: "success" as const,
-        };
-      }
-
-      return {
-        ...row,
-        status: "Needs evidence",
-        tone: "warning" as const,
-      };
-    });
-
-    return [
-      ...updated,
-      ...fallbackLedger.filter((item) => item.vendor !== VENDOR),
-    ];
-  }, [interactionResult, conflicts]);
-
+  const demoVendors = [{ name: VENDOR, category: 'Active demo relationship', spend: 'Not calculated' }];
   const timeline = useMemo<TimelineItem[]>(() => {
     const items: TimelineItem[] = [];
 
@@ -274,25 +176,10 @@ export default function Home() {
           "The original interaction and extracted commitments were persisted into the PactTrace Hindsight bank.",
         tone: "memory",
       });
-    } else {
-      items.push({
-        label: "Historical memory",
-        title: "CloudNova commitments available",
-        description:
-          "PactTrace has persistent vendor history available in Hindsight for future comparison.",
-        tone: "memory",
-      });
     }
 
-    items.push({
-      label: "Renewal quote",
-      title: "130-seat renewal received",
-      description:
-        "CloudNova submitted a renewal quote that explicitly includes no renewal discount.",
-      tone: "event",
-    });
-
     if (analysisResult?.success) {
+      items.push({ label: "Quote received", title: "Vendor quote submitted", description: submittedQuote, tone: "event" });
       items.push({
         label: "Hindsight recall",
         title: `${analysisResult.memoryCount ?? 0} memories recalled`,
@@ -313,10 +200,10 @@ export default function Home() {
       } else {
         items.push({
           label: "PactTrace analysis",
-          title: "No material conflict identified",
+          title: analysisResult.analysisStatus === "no_memories" ? "No historical evidence found" : "Comparison completed",
           description:
-            "The quote analysis completed without finding a high-confidence commitment conflict.",
-          tone: "success",
+            analysisResult.summary ?? "Review the evidence and recommendation before making a decision.",
+          tone: "event",
         });
       }
     }
@@ -326,12 +213,17 @@ export default function Home() {
     interactionResult,
     analysisResult,
     potentialConflicts,
+    submittedQuote,
   ]);
 
   async function rememberInteraction(event: FormEvent) {
     event.preventDefault();
+    if (busyRef.current) return;
+    busyRef.current = true;
 
     setRemembering(true);
+    setAnalysisResult(null);
+    setShowBrief(false);
     setInteractionResult(null);
 
     setActivity((current) => [
@@ -357,6 +249,7 @@ export default function Home() {
       setInteractionResult(data);
 
       if (data.success) {
+        setLastRemembered(interaction);
         setActivity((current) => [
           `${data.memory?.itemsCount ?? 0} memories retained in Hindsight`,
           `${data.extracted?.commitments.length ?? 0} commitments extracted from vendor interaction`,
@@ -379,13 +272,17 @@ export default function Home() {
         ...current,
       ]);
     } finally {
+      busyRef.current = false;
       setRemembering(false);
     }
   }
 
   async function analyzeQuote(event: FormEvent) {
     event.preventDefault();
+    if (busyRef.current) return;
+    busyRef.current = true;
 
+    setSubmittedQuote(quote);
     setAnalyzing(true);
     setAnalysisResult(null);
     setShowBrief(false);
@@ -446,22 +343,25 @@ export default function Home() {
         ...current,
       ]);
     } finally {
+      busyRef.current = false;
       setAnalyzing(false);
     }
   }
 
   function resetView() {
+    if (busyRef.current) return;
     setInteractionResult(null);
     setAnalysisResult(null);
     setShowBrief(false);
     setActivity([
-      "PactTrace connected to Hindsight memory",
+      "Ready to retain or recall vendor memory",
       "CloudNova selected as active vendor",
     ]);
   }
 
   return (
     <main className="min-h-screen bg-[#070b14] text-slate-100">
+      <a href="#analyzer" className="sr-only focus:not-sr-only focus:block focus:p-4">Skip to quote analyzer</a>
       <div className="flex min-h-screen">
         <aside className="hidden w-64 flex-col border-r border-white/8 bg-[#0a0f1b] lg:flex">
           <div className="flex h-20 items-center border-b border-white/8 px-6">
@@ -516,11 +416,11 @@ export default function Home() {
             <div className="rounded-xl border border-emerald-400/15 bg-emerald-400/5 p-4">
               <div className="flex items-center gap-2 text-sm font-medium text-emerald-300">
                 <MemoryStick className="h-4 w-4" />
-                Hindsight Online
+                {interactionResult?.success || analysisResult?.success ? "Memory request verified" : "Memory not checked"}
               </div>
 
               <p className="mt-2 text-xs leading-5 text-slate-500">
-                Persistent vendor memory is active.
+                Retain or analyze to verify provider access.
               </p>
             </div>
           </div>
@@ -542,6 +442,7 @@ export default function Home() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={resetView}
+                  disabled={remembering || analyzing}
                   className="hidden items-center gap-2 rounded-xl border border-white/8 bg-white/[0.025] px-3 py-2 text-xs text-slate-400 transition hover:border-white/15 hover:text-slate-200 md:flex"
                 >
                   <RefreshCw className="h-3.5 w-3.5" />
@@ -597,15 +498,15 @@ export default function Home() {
               <StatCard
                 icon={<Building2 className="h-5 w-5" />}
                 title="Active vendors"
-                value="3"
-                subtitle="Across 3 categories"
+                value="1"
+                subtitle="Active demo relationship"
               />
 
               <StatCard
                 icon={<ShieldCheck className="h-5 w-5" />}
                 title="Tracked commitments"
-                value={String(ledgerRows.length + 6)}
-                subtitle="Institutional promises retained"
+                value={String(ledgerRows.length)}
+                subtitle="Current session evidence"
               />
 
               <StatCard
@@ -615,7 +516,7 @@ export default function Home() {
                 subtitle={
                   highRiskConflicts.length
                     ? `${highRiskConflicts.length} high severity`
-                    : "No high-risk issues"
+                    : analysisResult?.success ? "Review current evidence" : "Not analyzed yet"
                 }
               />
 
@@ -625,7 +526,7 @@ export default function Home() {
                 value={String(analysisResult?.memoryCount ?? 0)}
                 subtitle={
                   analysisResult?.success
-                    ? "Used for current analysis"
+                    ? `${analysisResult.memoriesUsed ?? analysisResult.memoryCount ?? 0} used for analysis`
                     : "Run analysis to recall"
                 }
               />
@@ -664,6 +565,10 @@ export default function Home() {
                     <VendorChip />
 
                     <textarea
+                      aria-label="Vendor interaction"
+                      maxLength={50000}
+                      required
+                      disabled={remembering || analyzing}
                       value={interaction}
                       onChange={(event) =>
                         setInteraction(event.target.value)
@@ -674,7 +579,7 @@ export default function Home() {
 
                     <div className="flex flex-wrap items-center gap-3">
                       <button
-                        disabled={remembering}
+                        disabled={remembering || analyzing || !interaction.trim() || lastRemembered === interaction}
                         className="flex items-center gap-2 rounded-xl bg-indigo-500 px-4 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-400 disabled:opacity-50"
                       >
                         {remembering ? (
@@ -689,7 +594,7 @@ export default function Home() {
                       </button>
 
                       <span className="text-xs text-slate-600">
-                        For demo recording, retain once only.
+                        {lastRemembered === interaction ? "This interaction was retained in this session." : "Stores real memories. Retain each interaction once."}
                       </span>
                     </div>
                   </form>
@@ -789,16 +694,20 @@ export default function Home() {
                       className="mt-5 space-y-4"
                     >
                       <textarea
+                        aria-label="New vendor quote"
+                        maxLength={50000}
+                        required
+                        disabled={remembering || analyzing}
                         value={quote}
                         onChange={(event) =>
-                          setQuote(event.target.value)
+                          { setQuote(event.target.value); setAnalysisResult(null); setShowBrief(false); }
                         }
                         rows={5}
                         className="w-full resize-none rounded-xl border border-white/10 bg-[#090e19] px-4 py-3 text-sm leading-6 text-slate-200 outline-none transition focus:border-indigo-500/60"
                       />
 
                       <button
-                        disabled={analyzing}
+                        disabled={remembering || analyzing || !quote.trim()}
                         className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-medium text-slate-950 transition hover:bg-slate-200 disabled:opacity-50"
                       >
                         {analyzing ? (
@@ -886,7 +795,7 @@ export default function Home() {
                     Memory execution
                   </h2>
 
-                  <div className="mt-5 space-y-1">
+                  <div aria-live="polite" aria-atomic="true" className="mt-5 space-y-1">
                     {activity.slice(0, 8).map(
                       (item, index) => (
                         <div
@@ -924,13 +833,13 @@ export default function Home() {
                       </h2>
                     </div>
 
-                    <div className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_16px_rgba(52,211,153,0.75)]" />
+                    <div aria-label="Provider status reflects completed requests only" className={`h-2.5 w-2.5 rounded-full ${interactionResult?.success || analysisResult?.success ? "bg-emerald-400" : "bg-slate-500"}`} />
                   </div>
 
                   <div className="mt-5 space-y-4">
                     <MetricRow
                       label="Bank"
-                      value="pacttrace-dev"
+                      value={interactionResult?.memory?.bankId ?? "Configured on server"}
                     />
 
                     <MetricRow
@@ -991,10 +900,11 @@ export default function Home() {
                 </div>
 
                 <div className="mt-5 overflow-hidden rounded-xl border border-white/8">
+                  {ledgerRows.length === 0 && <p className="p-4 text-sm text-slate-400">Capture a promise or analyze a quote to see actual commitment evidence. This view resets on refresh; Hindsight memories persist.</p>}
                   {ledgerRows.map((item, index) => (
                     <div
                       key={`${item.vendor}-${index}`}
-                      className="flex items-center justify-between gap-4 border-b border-white/8 bg-black/15 px-4 py-4 last:border-0"
+                      className="flex flex-wrap items-center justify-between gap-4 border-b border-white/8 bg-black/15 px-4 py-4 last:border-0"
                     >
                       <div>
                         <div className="text-sm font-medium">
@@ -1065,7 +975,7 @@ export default function Home() {
                             </div>
 
                             <div className="text-xs text-slate-500">
-                              annual spend
+                              financial impact unavailable
                             </div>
                           </div>
 
@@ -1100,6 +1010,7 @@ export default function Home() {
                 </div>
 
                 <div className="mt-6">
+                  {timeline.length === 0 && <p className="text-sm text-slate-400">No completed memory actions in this session. Capture a promise or analyze a quote to begin.</p>}
                   {timeline.map((item, index) => (
                     <TimelineRow
                       key={`${item.title}-${index}`}
@@ -1157,7 +1068,7 @@ function NegotiationBrief({
           </SectionEyebrow>
 
           <h2 className="mt-1 text-xl font-semibold">
-            CloudNova Renewal
+            {analysis.vendor ?? "Vendor"} Negotiation
           </h2>
         </div>
 
@@ -1174,7 +1085,7 @@ function NegotiationBrief({
           label="Primary risk"
           value={
             primary?.title ??
-            "No high-confidence conflict"
+            "Review available evidence"
           }
           accent
         />
@@ -1183,7 +1094,7 @@ function NegotiationBrief({
           label="Memory evidence"
           value={
             primary?.historicalCommitment ??
-            `${analysis.memoryCount ?? 0} historical memories were reviewed.`
+            `${analysis.memoryCount ?? 0} historical memories were recalled.`
           }
         />
 
@@ -1582,7 +1493,7 @@ function ErrorBox({
   children: ReactNode;
 }) {
   return (
-    <div className="rounded-xl border border-red-400/20 bg-red-400/5 p-4 text-sm text-red-300">
+    <div role="alert" className="rounded-xl border border-red-400/20 bg-red-400/5 p-4 text-sm text-red-300">
       {children}
     </div>
   );

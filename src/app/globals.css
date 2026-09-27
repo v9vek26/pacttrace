@@ -60,3 +60,11 @@ textarea {
 ::-webkit-scrollbar-thumb:hover {
   background: #334155;
 }
+/* Keyboard access and narrow-screen evidence text. */
+:focus-visible { outline: 2px solid #a5b4fc; outline-offset: 3px; }
+section[id], div[id] { scroll-margin-top: 110px; }
+p, h2, h3 { overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

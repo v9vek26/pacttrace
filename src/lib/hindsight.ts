@@ -1,3 +1,5 @@
+import "server-only";
+
 import { HindsightClient } from "@vectorize-io/hindsight-client";
 
 let hindsightClient: HindsightClient | null = null;

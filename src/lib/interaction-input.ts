@@ -3,8 +3,8 @@ import "server-only";
 import { z } from "zod";
 
 export const extractionInputSchema = z.object({
-  vendor: z.string().trim().min(1),
-  interaction: z.string().trim().min(1),
+  vendor: z.string().trim().min(1).max(200),
+  interaction: z.string().trim().min(1).max(50_000),
 });
 
 export const interactionInputSchema = extractionInputSchema.extend({

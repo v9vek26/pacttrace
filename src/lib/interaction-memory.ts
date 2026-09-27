@@ -47,7 +47,7 @@ export async function retainInteraction(
     })),
   ];
 
-  const result = await getHindsightClient().retainBatch(bankId, items, { async: false });
+  const result = await getHindsightClient().retainBatch(bankId, items, { async: false, signal: AbortSignal.timeout(60_000) });
   // Do not claim retention if the provider only queued or partially accepted it.
   if (!result.success || result.async || result.items_count !== items.length) {
     throw new Error("Hindsight did not confirm the complete batch");

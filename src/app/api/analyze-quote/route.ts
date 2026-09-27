@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { analyzeQuote, quoteInputSchema } from "@/lib/conflict-analysis";
 import { GROQ_MODEL } from "@/lib/groq";
-import { recallVendorMemories, type VendorMemory } from "@/lib/vendor-memory";
+import { recallVendorMemories, selectVendorMemories, type VendorMemory } from "@/lib/vendor-memory";
 
 export async function POST(request: NextRequest) {
   let body: unknown;
@@ -32,8 +32,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const retryState = { retryCount: 0 };
   try {
-    const analysis = await analyzeQuote(input.data, memories);
+    const analysis = await analyzeQuote(input.data, memories, retryState);
     return NextResponse.json({
       success: true,
       ...analysis,
@@ -48,6 +49,8 @@ export async function POST(request: NextRequest) {
         analysisStatus: "failed",
         stage: "analysis",
         memoryCount: memories.length,
+        memoriesUsed: selectVendorMemories(memories).length,
+        retryCount: retryState.retryCount,
         upstreamStatus: typeof error === "object" && error !== null && "status" in error && typeof error.status === "number" ? error.status : null,
         code: error instanceof Error && error.message === "Quote comparison failed validation"
           ? "invalid_analysis" : "analysis_provider_failure",

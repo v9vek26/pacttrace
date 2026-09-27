@@ -1,5 +1,6 @@
 import "server-only";
 
+import { withGroqRetry } from "@/lib/groq-retry";
 import { z } from "zod";
 import { getGroqClient, GROQ_MODEL } from "@/lib/groq";
 
@@ -75,7 +76,7 @@ export async function extractCommitments(
 ): Promise<ExtractedCommitments> {
   const groq = getGroqClient();
 
-  const completion = await groq.chat.completions.create({
+  const completion = await withGroqRetry(() => groq.chat.completions.create({
     model: GROQ_MODEL,
     reasoning_effort: "low",
     reasoning_format: "hidden",
@@ -126,7 +127,7 @@ ${interaction}
         schema: commitmentSchema,
       },
     },
-  });
+  }, { timeout: 60_000, maxRetries: 0 }));
 
   const content = completion.choices[0]?.message?.content;
 

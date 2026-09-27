@@ -1,3 +1,5 @@
+import "server-only";
+
 import Groq from "groq-sdk";
 
 let groqClient: Groq | null = null;
