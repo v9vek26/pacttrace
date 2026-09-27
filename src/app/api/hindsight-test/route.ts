@@ -42,9 +42,7 @@ export async function GET() {
       },
     });
 
-    const recall = await client.recall(bankId, TEST_QUERY, {
-      limit: 5,
-    });
+    const recall = await client.recall(bankId, TEST_QUERY);
 
     return NextResponse.json({
       success: true,
