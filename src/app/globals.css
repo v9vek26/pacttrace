@@ -2,6 +2,21 @@
 
 :root {
   color-scheme: dark;
+
+  --background: #060913;
+  --background-elevated: #090e19;
+  --surface: #0b111e;
+  --surface-soft: #0e1524;
+
+  --border: rgba(255, 255, 255, 0.075);
+  --border-strong: rgba(255, 255, 255, 0.12);
+
+  --text-primary: #f8fafc;
+  --text-secondary: #94a3b8;
+  --text-muted: #64748b;
+
+  --accent: #6366f1;
+  --accent-soft: rgba(99, 102, 241, 0.12);
 }
 
 * {
@@ -10,19 +25,49 @@
 
 html {
   scroll-behavior: smooth;
-  background: #070b14;
+  background: var(--background);
 }
 
 body {
   margin: 0;
-  background: #070b14;
-  color: #f8fafc;
-  font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  background:
+    radial-gradient(
+      circle at 45% -10%,
+      rgba(99, 102, 241, 0.09),
+      transparent 34rem
+    ),
+    radial-gradient(
+      circle at 100% 15%,
+      rgba(56, 189, 248, 0.035),
+      transparent 28rem
+    ),
+    var(--background);
+
+  color: var(--text-primary);
+
+  font-family:
+    var(--font-geist-sans),
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+
+  font-feature-settings:
+    "rlig" 1,
+    "calt" 1;
+
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 button,
 textarea,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -40,31 +85,132 @@ textarea {
 
 ::selection {
   background: rgba(99, 102, 241, 0.35);
+  color: #ffffff;
 }
 
+/* ------------------------------------------------ */
+/* Scrollbar                                        */
+/* ------------------------------------------------ */
+
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 9px;
+  height: 9px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #070b14;
+  background: #060913;
 }
 
 ::-webkit-scrollbar-thumb {
   background: #1e293b;
+  border: 2px solid #060913;
   border-radius: 999px;
-  border: 2px solid #070b14;
 }
 
 ::-webkit-scrollbar-thumb:hover {
   background: #334155;
 }
-/* Keyboard access and narrow-screen evidence text. */
-:focus-visible { outline: 2px solid #a5b4fc; outline-offset: 3px; }
-section[id], div[id] { scroll-margin-top: 110px; }
-p, h2, h3 { overflow-wrap: anywhere; }
+
+/* ------------------------------------------------ */
+/* Keyboard accessibility                           */
+/* ------------------------------------------------ */
+
+:focus-visible {
+  outline: 2px solid #818cf8;
+  outline-offset: 3px;
+}
+
+button,
+a,
+textarea,
+input {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ------------------------------------------------ */
+/* Anchor positioning                               */
+/* ------------------------------------------------ */
+
+section[id],
+div[id] {
+  scroll-margin-top: 110px;
+}
+
+/* ------------------------------------------------ */
+/* Long AI-generated evidence protection            */
+/* ------------------------------------------------ */
+
+p,
+h1,
+h2,
+h3,
+span {
+  overflow-wrap: anywhere;
+}
+
+/* ------------------------------------------------ */
+/* Better form styling                              */
+/* ------------------------------------------------ */
+
+textarea::placeholder,
+input::placeholder {
+  color: #475569;
+}
+
+textarea:disabled,
+input:disabled {
+  opacity: 0.7;
+}
+
+/* ------------------------------------------------ */
+/* Subtle application texture                       */
+/* ------------------------------------------------ */
+
+body::before {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+
+  pointer-events: none;
+
+  content: "";
+
+  background-image:
+    linear-gradient(
+      rgba(255, 255, 255, 0.008) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.008) 1px,
+      transparent 1px
+    );
+
+  background-size: 48px 48px;
+
+  mask-image:
+    linear-gradient(
+      to bottom,
+      black,
+      transparent 75%
+    );
+}
+
+/* ------------------------------------------------ */
+/* Reduced-motion support                           */
+/* ------------------------------------------------ */
+
 @media (prefers-reduced-motion: reduce) {
-  html { scroll-behavior: auto; }
-  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
