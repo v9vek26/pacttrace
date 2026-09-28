@@ -62,4 +62,8 @@ PactTrace currently demonstrates a single-bank workflow, not a complete enterpri
 
 The lesson from building it is concrete: long-term memory changes the evidence available to an agent. Hindsight lets a later request recover a promise made in an earlier interaction. Groq can then compare those sources, and PactTrace can make the comparison inspectable. Remembering the relationship is what turns an isolated quote into a meaningful negotiation question.
 
-<!-- Before publication: add the final repository, deployment and public video links. Capture screenshots from a verified live run. -->
+Repository: https://github.com/v9vek26/pacttrace
+
+Live demo: https://pacttrace.vercel.app
+
+<!-- Before publication: add the public video link and verified live screenshots. Each member should adapt the article to their own contribution. -->

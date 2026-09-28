@@ -13,6 +13,10 @@ Use synthetic data only. Keep provider dashboards, environment settings and term
 | 2:25–2:45 | Open **Prepare negotiation brief** and scroll to the timeline. “The brief uses the actual recalled promise and current evidence. These timeline entries are system actions, not hidden model reasoning.” |
 | 2:45–3:00 | “Without memory, this is generic quote analysis. With Hindsight, the agent can bring the relationship's actual history into the next decision.” |
 
+## Current prepared-bank rehearsal
+
+The release bank already contains the single verified interaction and two commitments. Do not click **Extract & Remember** or run the seed again. Start a fresh browser session, analyze the prefilled quote, show the historical evidence and high-severity potential conflict, then open the negotiation brief. Explain that retention was performed earlier and that this new session demonstrates persistent recall. For a video requiring live before/after retention, use a separately provisioned empty recording bank; do not add duplicates to the release bank.
+
 ## Preparation
 
 Manually select `pacttrace-demo` in your environment and restart or redeploy. Choose either the guarded CLI seed for an analysis-only rehearsal or live UI retention for the full recording. Do not do both repeatedly. The CLI is safe to rerun against its fixed documents, but UI submissions create new interactions. Keep provider limits in mind; one rehearsal is more useful than five rapid requests.

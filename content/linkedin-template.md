@@ -17,7 +17,8 @@ The implementation also keeps uncertainty visible. Missing evidence is not a vio
 
 This is a demonstration with synthetic vendor data, not a production-customer or savings claim.
 
-Repository: [insert final repository link]
+Repository: https://github.com/v9vek26/pacttrace
+Live demo: https://pacttrace.vercel.app
 Technical article: [insert published article link]
 Live retain/recall video: [insert public video link]
 

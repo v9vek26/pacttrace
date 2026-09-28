@@ -36,7 +36,7 @@ sequenceDiagram
 
 Original interaction text is preserved inside a labelled memory. Commitments include description, value, condition, deadline when present, and status. Metadata includes vendor, source, memory type, commitment type, and interaction ID. The context is `vendor negotiation`. An empty extraction still stores the interaction. A partial or asynchronous receipt is not reported as confirmed synchronous retention. There is no claim of transaction rollback after a timeout.
 
-The CLI seed uses three explicit demo fixtures with stable document IDs and replace semantics. It requires a confirmation flag and an explicitly selected `pacttrace-demo` bank. It creates that bank only after a 404, not after authentication failures. It never wipes a bank.
+The CLI seed uses three explicit demo fixtures with stable document IDs and replace semantics. It requires a confirmation flag and an explicitly selected `pacttrace-demo` bank. It probes the supported document-list endpoint, because the legacy bank profile endpoint was removed in Hindsight 0.10. It creates that bank only after a 404, not after authentication failures. It never wipes a bank.
 
 ## Recall and analysis
 

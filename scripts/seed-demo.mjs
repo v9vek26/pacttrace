@@ -16,7 +16,9 @@ export const demoItems = [
 export async function seedDemo(client, bankId) {
   if (bankId !== "pacttrace-demo") throw new Error("Demo bank confirmation required");
   try {
-    await client.getBankProfile(bankId);
+    // Profile was removed in Hindsight 0.10 (HTTP 410). This read-only
+    // endpoint still distinguishes a missing bank from authentication failure.
+    await client.listDocuments(bankId, { limit: 1 });
   } catch (error) {
     if (error?.statusCode !== 404) throw error;
     await client.createBank(bankId, { name: "PactTrace Demo" });
