@@ -131,6 +131,7 @@ The CLI checks bank existence through the supported document-list endpoint (the 
 - [Three-minute demo](docs/demo-script.md)
 - [Submission notes](docs/submission-notes.md)
 - [Release checklist](docs/release-checklist.md)
+- [Content requirements review](docs/content-review.md)
 - [Article draft](content/article-template.md), [LinkedIn draft](content/linkedin-template.md), [video script](content/video-script.md)
 
 Future work: organization-scoped identity and bank isolation, durable idempotency for interactive writes, audit trails, tested numerical exposure calculations, stronger condition verification, and persistent multi-vendor UI state. Provider availability and correctness still require human review; no benchmarks or production-customer claims are implied.

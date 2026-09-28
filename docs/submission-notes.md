@@ -26,3 +26,10 @@ Tenant identity and bank isolation, durable interactive-write idempotency, multi
 
 ## Release honesty
 The repository supports a controlled demonstration. Production configuration, access protection, credential validity, published media and submission remain release gates. No customer deployments, benchmark scores or savings figures are claimed.
+
+## Final links and publication
+
+- Repository: https://github.com/v9vek26/pacttrace
+- Live app: https://pacttrace.vercel.app
+- [Content requirements review](content-review.md)
+- Published articles, member social posts and the public team video: pending manual publication.
